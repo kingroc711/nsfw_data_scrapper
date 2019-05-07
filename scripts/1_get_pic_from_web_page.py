@@ -6,8 +6,6 @@ import json
 from urllib.error import URLError, HTTPError
 import hashlib
 
-
-
 class MonitorThread(Thread):
 
     def __init__(self, name, args):
@@ -74,23 +72,23 @@ def is_valid_jpg(jpg_file):
         f.close()
         return buf ==  b'\xff\xd9'  # 判定jpg是否包含结束字段
 
-def DownloadFile(fullName, url, time=5):
-    user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
-
-    headers = {'User-Agent': user_agent}
-
-    req = urllib.request.Request(url, headers=headers)
+def DownloadFile(fullName, url, time=4):
+    opener = urllib.request.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36')]
+    urllib.request.install_opener(opener)
 
     try:
         urllib.request.urlretrieve(url, fullName)
-    except (HTTPError, URLError, socket.timeout, socket.gaierror) as e:
-        printE('exception %s' % e)
+        printI('download file %s OK ' % url)
+    except Exception as e:
+        printE('download url : %s ,exception %s' % (url, e))
         if time > 0:
             time -= 1
-            print("URLTools %s " % url)
+            print("DownloadFile %s " % url)
             DownloadFile(fullName, url, time)
         else:
             printE('file: %s downlaod alway faild' % url)
+
 
 def DownloadPic(path, url_list):
     for url in url_list:
