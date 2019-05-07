@@ -108,6 +108,8 @@ def DownloadFile(path, url, time=5):
             DownloadFile(path, url, time)
         else:
             printE('file: %s downlaod alway faild' % url)
+            line = 'echo ' + url + ' >> ./errorurl.txt'
+            os.system(line)
 
 
     # opener = urllib.request.build_opener()
