@@ -27,7 +27,7 @@ def printE(s):
     print('\033[31m ' + s + ' \033[0m!')
 
 def printI(s):
-    print('\033[32m ' + s + ' \033[0m!')
+    print('\033[32m ' + s + ' \033[0m')
 
 def URLTools(url, time=5):
     user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
@@ -46,6 +46,9 @@ def URLTools(url, time=5):
             time -= 1
             print("URLTools %s " % url)
             return URLTools(url, time)
+        else:
+            cmdline = 'echo ' + url + ' >> ' + source_urls + '/errorurl.txt'
+            os.system(cmdline)
 
 def getDownloadPicUrl(string):
     jsonObj = json.loads(string)
@@ -75,30 +78,27 @@ def is_valid_jpg(jpg_file):
 
 def DownloadFile(path, url, time=5):
     md5_val = hashlib.md5(url.encode('utf8')).hexdigest()
-    header = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
+
+    pic_full_name = path + '/' + md5_val + '.' + 'jpeg'
+    if os.path.exists(pic_full_name):
+        printI('file exist %s ' % pic_full_name)
+        if is_valid_jpg(pic_full_name) is False:
+            os.remove(pic_full_name)
+            printI('remove pic %s ' % pic_full_name)
+        else:
+            return
+
     try:
         s = requests.session()
         s.keep_alive = False
-        r = s.get(url, headers=header)
+        r = s.get(url, headers={'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'})
         headers = r.headers
-        #printI(str(headers))
         if 'Content-Type' in headers:
             dtype = headers['Content-Type']
-            #printI(dtype)
-            if dtype == 'image/jpeg' or dtype == 'image/png':
-                ext_name = dtype.split('/')[1]
-                pic_full_name = path + '/' + md5_val + '.' + ext_name
+            if dtype == 'image/jpeg':
                 printI('pic_name : %s, url : %s' % (pic_full_name, url))
-                if os.path.exists(pic_full_name):
-                    printI('file exist %s ' % pic_full_name)
-                    if is_valid_jpg(pic_full_name) is False:
-                        os.remove(pic_full_name)
-                        printI('remove pic')
-                        with open(pic_full_name, 'wb') as f:
-                            f.write(r.content)
-                else:
-                    with open(pic_full_name, 'wb') as f:
-                        f.write(r.content)
+                with open(pic_full_name, 'wb') as f:
+                    f.write(r.content)
 
     except Exception as e:
         printE('error : %s ' % e)
@@ -108,52 +108,19 @@ def DownloadFile(path, url, time=5):
             DownloadFile(path, url, time)
         else:
             printE('file: %s downlaod alway faild' % url)
-            line = 'echo ' + url + ' >> ./errorurl.txt'
-            os.system(line)
-
-
-    # opener = urllib.request.build_opener()
-    # opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36')]
-    # urllib.request.install_opener(opener)
-    #
-    # try:
-    #     urllib.request.urlretrieve(url, fullName)
-    #     printI('download file %s OK ' % url)
-    # except Exception as e:
-    #     printE('download url : %s ,exception %s' % (url, e))
-    #     if time > 0:
-    #         time -= 1
-    #         print("DownloadFile %s " % url)
-    #         DownloadFile(fullName, url, time)
-    #     else:
-    #         printE('file: %s downlaod alway faild' % url)
-
+            cmdline = 'echo ' + url + ' >> ' + path + '/errorurl.txt'
+            os.system(cmdline)
 
 def DownloadPics(path, url_list):
     for url in url_list:
         DownloadFile(path, url)
-
-
-    # for url in url_list:
-    #     md5_val = hashlib.md5(url.encode('utf8')).hexdigest()
-    #     print(md5_val, url)
-    #     pic_full_name = path + '/' + md5_val + '.jpg'
-    #     #print(pic_full_name)
-    #     if os.path.exists(pic_full_name):
-    #         printE('%s exists %s' % (pic_full_name, md5_val))
-    #         if is_valid_jpg(pic_full_name) is False:
-    #             printE('%s exists not valid jpg file need download ' % (pic_full_name))
-    #             os.remove(pic_full_name)
-    #             DownloadFile(pic_full_name, url)
-    #     else:
-    #         DownloadFile(pic_full_name, url)
 
 curPath = os.path.abspath('.')
 parentPath = os.path.abspath('..')
 
 raw_data = parentPath + '/raw_data/'
 source_urls = curPath + '/source_urls/'
-i = 0
+
 fileList = os.listdir(source_urls)
 for fileName in fileList:
     downloadPath = raw_data + fileName.split('.')[0]
