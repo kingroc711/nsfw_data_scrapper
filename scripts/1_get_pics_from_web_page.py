@@ -6,6 +6,8 @@ import json
 from urllib.error import URLError, HTTPError
 import hashlib
 import requests
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 class MonitorThread(Thread):
 
@@ -24,10 +26,13 @@ class MonitorThread(Thread):
         print(json)
 
 def printE(s):
-    print('\033[31m ' + s + ' \033[0m!')
+    print('\033[31m ' + s + ' \033[0m')
 
 def printI(s):
     print('\033[32m ' + s + ' \033[0m')
+
+def printV(s):
+    print('\033[33m ' + s + ' \033[0m')
 
 def URLTools(url, time=5):
     user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
@@ -115,36 +120,55 @@ def DownloadPics(path, url_list):
     for url in url_list:
         DownloadFile(path, url)
 
+def DownloadThread(m):
+    org_url = m['url']
+    download_path = m['path']
+    url = org_url
+
+    printV('%s, download path %s, url : %s ' % (threading.current_thread().getName(), download_path, url))
+
+    while True:
+        jsonString = URLTools(url)
+        if jsonString is None:
+            printE(url + '   no no no no no no no no no no no no no  work ')
+        else:
+            printI(url + '   work work work work work work work work work good ')
+
+            after, pic_list = getDownloadPicUrl(jsonString)
+            #print(downloadPath, pic_list)
+            DownloadPics(download_path, pic_list)
+            if after is None:
+                printE('url %s after is None' % org_url)
+                break;
+            else:
+                afterUrl = org_url + "&after=" + after
+                #print('after url : ' + afterUrl)
+                url = afterUrl
+
 curPath = os.path.abspath('.')
 parentPath = os.path.abspath('..')
-
 raw_data = parentPath + '/raw_data/'
 source_urls = curPath + '/source_urls/'
 
-fileList = os.listdir(source_urls)
-for fileName in fileList:
-    downloadPath = raw_data + fileName.split('.')[0]
-    fileFullName = os.path.join(source_urls, fileName)
-    print(fileFullName)
-    fb = open(fileFullName, 'r')
-    lines = fb.readlines()
-    for line in lines:
-        org_url = line.strip()
-        url = org_url
-        while True:
-            jsonString = URLTools(url)
-            if jsonString is None:
-                printE(url + '   no no no no no no no no no no no no no  work ')
-            else:
-                printI(url + '   work work work work work work work work work good ')
+def main():
 
-                after, pic_list = getDownloadPicUrl(jsonString)
-                #print(downloadPath, pic_list)
-                DownloadPics(downloadPath, pic_list)
-                if after is None:
-                    printE('url %s after is None' % org_url)
-                    break;
-                else:
-                    afterUrl = org_url + "&after=" + after
-                    #print('after url : ' + afterUrl)
-                    url = afterUrl
+    fileList = os.listdir(source_urls)
+    download_list = []
+    for fileName in fileList:
+        downloadPath = raw_data + fileName.split('.')[0]
+        fileFullName = os.path.join(source_urls, fileName)
+        print(fileFullName)
+        fb = open(fileFullName, 'r')
+        lines = fb.readlines()
+        for line in lines:
+            d = dict()
+            d['path'] = downloadPath
+            d['url'] = line.strip()
+            download_list.append(d)
+
+    with ThreadPoolExecutor(10) as executor1:
+        executor1.map(DownloadThread, download_list)
+
+
+if __name__ == '__main__':
+    main()
