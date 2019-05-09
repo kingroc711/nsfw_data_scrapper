@@ -104,6 +104,9 @@ def DownloadFile(path, url, time=5):
                 printI('pic_name : %s, url : %s' % (pic_full_name, url))
                 with open(pic_full_name, 'wb') as f:
                     f.write(r.content)
+            else:
+                cmdline = 'echo ' + 'path : ' + path + ', url : ' + url + ', type : ' + dtype + ' >> ' + path + 'typeerror.txt'
+                os.system(cmdline)
 
     except Exception as e:
         printE('DownloadFile error : %s ' % e)
