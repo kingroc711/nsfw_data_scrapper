@@ -46,7 +46,7 @@ def URLTools(url, time=5):
         json_txt = response.read().decode("utf8")
         return json_txt
     except (HTTPError, URLError, socket.timeout, socket.gaierror) as e:
-        print('exception %s' % e)
+        print('URLTools exception %s' % e)
         if(time > 0):
             time -= 1
             print("URLTools %s " % url)
@@ -106,7 +106,7 @@ def DownloadFile(path, url, time=5):
                     f.write(r.content)
 
     except Exception as e:
-        printE('error : %s ' % e)
+        printE('DownloadFile error : %s ' % e)
         if time > 0:
             time -= 1
             printE("DownloadFile faild %s " % url)
