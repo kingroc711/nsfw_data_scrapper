@@ -47,12 +47,11 @@ def URLTools(url, time=5):
         return json_txt
     except (HTTPError, URLError, socket.timeout, socket.gaierror) as e:
         print('URLTools exception %s' % e)
-        if(time > 0):
+        if time > 0:
             time -= 1
-            print("URLTools %s " % url)
             return URLTools(url, time)
         else:
-            cmdline = 'echo ' + url + ' >> ' + source_urls + '/errorurl.txt'
+            cmdline = 'echo ' + url + ' >> ' + source_urls + '/errorjson.txt'
             os.system(cmdline)
 
 def getDownloadPicUrl(string):
@@ -79,17 +78,31 @@ def is_valid_jpg(jpg_file):
         f.seek(-2, 2)
         buf = f.read()
         f.close()
-        return buf ==  b'\xff\xd9'  # 判定jpg是否包含结束字段
+        return buf == b'\xff\xd9'  # 判定jpg是否包含结束字段
+
+def is_valid_png(png_file):
+    with open(png_file, 'rb') as f:
+        f.seek(-2, 2)
+        buf = f.read()
+        return buf == b'\x60\x82'
 
 def DownloadFile(path, url, time=5):
     md5_val = hashlib.md5(url.encode('utf8')).hexdigest()
+    jpeg_full_name = path + '/' + md5_val + '.jpeg'
+    png_full_name = path + '/' + md5_val + '.png'
 
-    pic_full_name = path + '/' + md5_val + '.' + 'jpeg'
-    if os.path.exists(pic_full_name):
-        printI('file exist %s ' % pic_full_name)
-        if is_valid_jpg(pic_full_name) is False:
-            os.remove(pic_full_name)
-            printI('remove pic %s ' % pic_full_name)
+    if os.path.exists(jpeg_full_name):
+        printI('file exist %s ' % jpeg_full_name)
+        if is_valid_jpg(jpeg_full_name) is False:
+            os.remove(jpeg_full_name)
+            printI('remove pic %s ' % jpeg_full_name)
+        else:
+            return
+    elif os.path.exists(png_full_name):
+        printI('file exist %s ' % png_full_name)
+        if is_valid_png(png_full_name) is False:
+            os.remove(png_full_name)
+            printI('remove pic %s ' % png_full_name)
         else:
             return
 
@@ -100,7 +113,8 @@ def DownloadFile(path, url, time=5):
         headers = r.headers
         if 'Content-Type' in headers:
             dtype = headers['Content-Type']
-            if dtype == 'image/jpeg':
+            if dtype == 'image/jpeg' or dtype == 'image/png':
+                pic_full_name = path + '/' + md5_val + '.' + dtype.split('/')[1]
                 printI('pic_name : %s, url : %s' % (pic_full_name, url))
                 with open(pic_full_name, 'wb') as f:
                     f.write(r.content)
