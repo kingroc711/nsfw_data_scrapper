@@ -51,7 +51,7 @@ def URLTools(url, time=5):
             time -= 1
             return URLTools(url, time)
         else:
-            cmdline = 'echo ' + url + ' >> ' + source_urls + '/errorjson.txt'
+            cmdline = 'echo ' + url + ' >> ./errorjson.txt'
             os.system(cmdline)
 
 def getDownloadPicUrl(string):

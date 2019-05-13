@@ -107,7 +107,7 @@ def main():
             download_list.append(d)
 
     print(len(download_list), download_path)
-    with ThreadPoolExecutor(5) as executor1:
+    with ThreadPoolExecutor(10) as executor1:
         executor1.map(check_and_download, download_list)
 
 
