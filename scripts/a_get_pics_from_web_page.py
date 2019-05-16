@@ -7,10 +7,9 @@ import hashlib
 import requests
 from concurrent.futures import ThreadPoolExecutor
 import threading
-from threading import Thread
 
 
-class GetPicsFromWebPage:
+class GetPicsFromWebPage(object):
     def printE(self, s):
         print('\033[31m ' + s + ' \033[0m')
 
@@ -41,7 +40,7 @@ class GetPicsFromWebPage:
                 os.system(cmdline)
                 return None
 
-    def getDownloadPicUrl(string):
+    def getDownloadPicUrl(self, string):
         jsonObj = json.loads(string)
         pic_list = []
         after = None
@@ -59,14 +58,14 @@ class GetPicsFromWebPage:
                         pic_list.append(pic_url)
         return after, pic_list
 
-    def isValidJPEG(jpg_file):
+    def isValidJPEG(self, jpg_file):
         with open(jpg_file, 'rb') as f:
             f.seek(-2, 2)
             buf = f.read()
             f.close()
             return buf == b'\xff\xd9'  # 判定jpg是否包含结束字段
 
-    def isValidPNG(png_file):
+    def isValidPNG(self, png_file):
         with open(png_file, 'rb') as f:
             f.seek(-2, 2)
             buf = f.read()
